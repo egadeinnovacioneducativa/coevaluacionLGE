@@ -88,7 +88,6 @@
 
                         <div>
                             <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Número de Equipo</label>
-                            <!-- Grid corregido para que todos los elementos tengan el mismo ancho -->
                             <div id="teamContainer" class="grid grid-cols-5 gap-2">
                                 <!-- JS genera los números aquí -->
                             </div>
@@ -139,13 +138,18 @@
         </div>
     </div>
 
+    <!-- Iframe invisible para el envío de datos alternativo -->
+    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
     <script>
         /**
          * CONFIGURACIÓN: PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
-         * IMPORTANTE: Asegúrate de que la implementación sea para "Cualquiera"
          */
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXKyd73pG7cqNCFFMgtUbDONOSWemIl0o5P24sPWixtSMNOx5PQNgG_hpn0gkj8Ta2/exec"; 
         
+        // Variable definida globalmente para evitar ReferenceError
+        let isSubmitting = false;
+
         const items = [
             "Cumplió en tiempo y forma las actividades que le fueron asignadas",
             "Fue puntual en las reuniones del grupo",
@@ -157,18 +161,11 @@
             "Tuvo capacidad para reconocer sus errores"
         ];
 
-        const likertScales = [
-            "Totalmente en desacuerdo", 
-            "En desacuerdo", 
-            "Neutral", 
-            "De acuerdo", 
-            "Totalmente de acuerdo"
-        ];
+        const likertScales = ["Totalmente en desacuerdo", "En desacuerdo", "Neutral", "De acuerdo", "Totalmente de acuerdo"];
 
         let currentStep = 0;
         let totalSteps = 1;
 
-        // Generar botones de equipo con estilo Tec
         const teamContainer = document.getElementById('teamContainer');
         for(let i=1; i<=5; i++) {
             teamContainer.innerHTML += `
@@ -186,7 +183,7 @@
             const numAevaluar = tamano - 1;
             const container = document.getElementById('dynamicSteps');
             container.innerHTML = '';
-            totalSteps = numAevaluar; // Número de compañeros a evaluar
+            totalSteps = numAevaluar;
 
             for (let i = 1; i <= numAevaluar; i++) {
                 const step = document.createElement('div');
@@ -203,14 +200,12 @@
                             <span class="text-sm font-black text-[#003399]">${i} de ${numAevaluar}</span>
                         </div>
                     </div>
-                    
                     <div class="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 shadow-inner">
                         <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre del estudiante a evaluar:</label>
                         <input type="text" name="nombre_companero_${i}" required 
                                class="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-[#003399] transition font-bold" 
                                placeholder="Ingrese nombre completo">
                     </div>
-
                     <div class="space-y-12">
                 `;
 
@@ -224,31 +219,19 @@
                                 <div class="likert-options flex justify-between md:contents">
                                     ${likertScales.map((label, sIdx) => `
                                         <label class="flex flex-col items-center group cursor-pointer relative">
-                                            <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">
-                                                ${label}
-                                            </span>
-                                            
+                                            <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">${label}</span>
                                             <div class="md:hidden likert-label-mobile w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
-                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required 
-                                                    onchange="toggleRetro(${i}, ${idx}, this.value)"
-                                                    class="w-5 h-5 text-[#003399] focus:ring-[#003399] border-slate-300">
+                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="w-5 h-5 text-[#003399] focus:ring-[#003399] border-slate-300">
                                                 <span class="font-bold text-slate-600 ml-2">${label}</span>
                                             </div>
-
-                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required 
-                                                onchange="toggleRetro(${i}, ${idx}, this.value)"
-                                                class="hidden md:block w-7 h-7 text-[#003399] focus:ring-[#003399] border-slate-300 cursor-pointer transform hover:scale-125 transition-transform shadow-sm">
+                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="hidden md:block w-7 h-7 text-[#003399] focus:ring-[#003399] border-slate-300 cursor-pointer transform hover:scale-125 transition-transform shadow-sm">
                                         </label>
                                     `).join('')}
                                 </div>
                             </div>
-                            
                             <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
                                 <label class="block text-xs font-black text-red-700 mb-3 uppercase tracking-widest">⚠️ Justificación del puntaje mínimo:</label>
-                                <textarea name="retro_c${i}_item${idx}" 
-                                          class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" 
-                                          rows="2" 
-                                          placeholder="Describa el motivo del desacuerdo..."></textarea>
+                                <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" rows="2" placeholder="Describa el motivo del desacuerdo..."></textarea>
                             </div>
                         </div>
                     `;
@@ -257,9 +240,7 @@
                 html += `
                     </div>
                     <div class="flex flex-col sm:flex-row gap-4 pt-10">
-                        <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">
-                            Regresar
-                        </button>
+                        <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">Regresar</button>
                         <button type="button" onclick="nextStep(${i + 1})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
                             ${i === numAevaluar ? 'Finalizar Revisión' : 'Siguiente Compañero'}
                         </button>
@@ -284,7 +265,7 @@
         }
 
         function updateProgress() {
-            const max = totalSteps + 1; // 0 (inicio), 1..n (compañeros), Final
+            const max = totalSteps + 1;
             let currentVal = currentStep === 'Final' ? max : currentStep;
             const progress = (currentVal / max) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
@@ -292,17 +273,11 @@
 
         function nextStep(target) {
             const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
-            
-            // Validación manual para asegurar que todo esté lleno
             let valid = true;
             const radioGroups = new Set();
             currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
-            radioGroups.forEach(name => {
-                if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false;
-            });
-            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => {
-                if(!input.value.trim()) valid = false;
-            });
+            radioGroups.forEach(name => { if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false; });
+            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => { if(!input.value.trim()) valid = false; });
 
             if(!valid) {
                 showStatus("Campos Faltantes", "Por favor completa todos los campos requeridos antes de continuar.", "⚠️");
@@ -310,16 +285,8 @@
             }
 
             if(currentStep === 0) createDynamicSteps();
-
             currentEl.classList.remove('active');
-            
-            // Lógica corregida para saltar a la pantalla final
-            if (target > totalSteps) {
-                currentStep = 'Final';
-            } else {
-                currentStep = target;
-            }
-            
+            currentStep = (target > totalSteps) ? 'Final' : target;
             const nextEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
             nextEl.classList.add('active');
             updateProgress();
@@ -327,38 +294,33 @@
         }
 
         function prevStep() {
-            const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
-            currentEl.classList.remove('active');
-            
-            if (currentStep === 'Final') {
-                currentStep = totalSteps;
-            } else {
-                currentStep = currentStep - 1;
-            }
-            
+            document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`).classList.remove('active');
+            currentStep = (currentStep === 'Final') ? totalSteps : currentStep - 1;
             document.getElementById(`step${currentStep}`).classList.add('active');
             updateProgress();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        document.getElementById('evaluationForm').onsubmit = async (e) => {
+        document.getElementById('evaluationForm').onsubmit = async function(e) {
             e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
             
-            btn.disabled = true;
-            btn.innerText = "ENVIANDO DATOS...";
-
             if (!GOOGLE_SCRIPT_URL) {
-                showStatus("Falta Configuración", "La URL de Google Sheets no ha sido configurada. Los datos no se guardarán.", "📋");
-                btn.disabled = false;
-                btn.innerText = "ENVIAR RESULTADOS";
+                showStatus("Falta Configuración", "La URL de Google Sheets no ha sido configurada.", "📋");
                 return;
             }
 
+            if (isSubmitting) return;
+            isSubmitting = true;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "ENVIANDO DATOS...";
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
             try {
-                // El modo no-cors es necesario para evitar problemas de redirección de Google Scripts
+                // Envío mediante fetch con modo no-cors
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -366,15 +328,24 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-
-                showStatus("Envío Completado", "Tu evaluación ha sido registrada exitosamente en Google Sheets.", "✅");
-                setTimeout(() => location.reload(), 3000);
+                
+                handleSuccess();
             } catch (error) {
-                showStatus("Error al enviar", "Hubo un problema al conectar con el servidor. Inténtalo de nuevo.", "❌");
+                console.error("Error de envío:", error);
+                showStatus("Error al enviar", "Hubo un problema de conexión. Inténtalo de nuevo.", "❌");
                 btn.disabled = false;
                 btn.innerText = "ENVIAR RESULTADOS";
+                isSubmitting = false;
             }
         };
+
+        function handleSuccess() {
+            showStatus("Envío Completado", "Tu evaluación ha sido registrada exitosamente.", "✅");
+            setTimeout(() => {
+                isSubmitting = false;
+                location.reload();
+            }, 3000);
+        }
 
         function showStatus(title, desc, icon) {
             document.getElementById('statusTitle').innerText = title;
