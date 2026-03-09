@@ -88,7 +88,8 @@
 
                         <div>
                             <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Número de Equipo</label>
-                            <div id="teamContainer" class="flex flex-wrap gap-3">
+                            <!-- Grid corregido para que todos los elementos tengan el mismo ancho -->
+                            <div id="teamContainer" class="grid grid-cols-5 gap-2">
                                 <!-- JS genera los números aquí -->
                             </div>
                         </div>
@@ -141,7 +142,7 @@
     <script>
         /**
          * CONFIGURACIÓN: PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
-         * Ejemplo: "https://script.google.com/macros/s/ABC123XYZ/exec"
+         * IMPORTANTE: Asegúrate de que la implementación sea para "Cualquiera"
          */
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXKyd73pG7cqNCFFMgtUbDONOSWemIl0o5P24sPWixtSMNOx5PQNgG_hpn0gkj8Ta2/exec"; 
         
@@ -171,10 +172,10 @@
         const teamContainer = document.getElementById('teamContainer');
         for(let i=1; i<=5; i++) {
             teamContainer.innerHTML += `
-                <label class="relative flex items-center justify-center cursor-pointer group flex-1 min-w-[80px]">
+                <label class="relative flex items-center justify-center cursor-pointer group w-full">
                     <input type="radio" name="equipo" value="${i}" required class="peer sr-only">
-                    <div class="w-full text-center px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-black text-slate-500 transition-all peer-checked:bg-[#003399] peer-checked:text-white peer-checked:border-[#003399] group-hover:border-blue-300">
-                        Eq ${i}
+                    <div class="w-full text-center py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-black text-slate-500 transition-all peer-checked:bg-[#003399] peer-checked:text-white peer-checked:border-[#003399] group-hover:border-blue-300">
+                        ${i}
                     </div>
                 </label>
             `;
@@ -185,7 +186,7 @@
             const numAevaluar = tamano - 1;
             const container = document.getElementById('dynamicSteps');
             container.innerHTML = '';
-            totalSteps = numAevaluar + 1;
+            totalSteps = numAevaluar; // Número de compañeros a evaluar
 
             for (let i = 1; i <= numAevaluar; i++) {
                 const step = document.createElement('div');
@@ -260,7 +261,7 @@
                             Regresar
                         </button>
                         <button type="button" onclick="nextStep(${i + 1})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
-                            Siguiente Paso
+                            ${i === numAevaluar ? 'Finalizar Revisión' : 'Siguiente Compañero'}
                         </button>
                     </div>
                 `;
@@ -275,7 +276,6 @@
             if (valor == "1") { 
                 div.classList.remove('hidden');
                 textarea.required = true;
-                textarea.focus();
             } else {
                 div.classList.add('hidden');
                 textarea.required = false;
@@ -284,36 +284,41 @@
         }
 
         function updateProgress() {
-            const total = totalSteps + 1;
-            const progress = ((currentStep) / (total - 1)) * 100;
+            const max = totalSteps + 1; // 0 (inicio), 1..n (compañeros), Final
+            let currentVal = currentStep === 'Final' ? max : currentStep;
+            const progress = (currentVal / max) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
         }
 
         function nextStep(target) {
             const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
-            const inputs = currentEl.querySelectorAll('input[required], select[required], textarea[required]');
-            let valid = true;
             
+            // Validación manual para asegurar que todo esté lleno
+            let valid = true;
             const radioGroups = new Set();
             currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
-            
             radioGroups.forEach(name => {
                 if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false;
             });
-
             currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => {
                 if(!input.value.trim()) valid = false;
             });
 
             if(!valid) {
-                showStatus("Campos Faltantes", "Para asegurar la validez académica, todas las preguntas deben ser respondidas.", "⚠️");
+                showStatus("Campos Faltantes", "Por favor completa todos los campos requeridos antes de continuar.", "⚠️");
                 return;
             }
 
             if(currentStep === 0) createDynamicSteps();
 
             currentEl.classList.remove('active');
-            currentStep = target === (totalSteps + 1) ? 'Final' : target;
+            
+            // Lógica corregida para saltar a la pantalla final
+            if (target > totalSteps) {
+                currentStep = 'Final';
+            } else {
+                currentStep = target;
+            }
             
             const nextEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
             nextEl.classList.add('active');
@@ -322,9 +327,15 @@
         }
 
         function prevStep() {
-            const target = currentStep === 'Final' ? totalSteps : currentStep - 1;
-            document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`).classList.remove('active');
-            currentStep = target;
+            const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
+            currentEl.classList.remove('active');
+            
+            if (currentStep === 'Final') {
+                currentStep = totalSteps;
+            } else {
+                currentStep = currentStep - 1;
+            }
+            
             document.getElementById(`step${currentStep}`).classList.add('active');
             updateProgress();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -337,16 +348,17 @@
             const data = Object.fromEntries(formData.entries());
             
             btn.disabled = true;
-            btn.innerText = "ENVIANDO...";
+            btn.innerText = "ENVIANDO DATOS...";
+
+            if (!GOOGLE_SCRIPT_URL) {
+                showStatus("Falta Configuración", "La URL de Google Sheets no ha sido configurada. Los datos no se guardarán.", "📋");
+                btn.disabled = false;
+                btn.innerText = "ENVIAR RESULTADOS";
+                return;
+            }
 
             try {
-                if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "") {
-                    showStatus("Error de Configuración", "Falta la URL del Google Apps Script en el código.", "🎓");
-                    btn.disabled = false;
-                    btn.innerText = "ENVIAR RESULTADOS";
-                    return;
-                }
-
+                // El modo no-cors es necesario para evitar problemas de redirección de Google Scripts
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -355,10 +367,10 @@
                     body: JSON.stringify(data)
                 });
 
-                showStatus("Envío Exitoso", "Tus evaluaciones han sido registradas en el sistema institucional.", "✅");
-                setTimeout(() => location.reload(), 4000);
+                showStatus("Envío Completado", "Tu evaluación ha sido registrada exitosamente en Google Sheets.", "✅");
+                setTimeout(() => location.reload(), 3000);
             } catch (error) {
-                showStatus("Error de Conexión", "No se pudo establecer conexión con el servidor. Inténtalo de nuevo.", "❌");
+                showStatus("Error al enviar", "Hubo un problema al conectar con el servidor. Inténtalo de nuevo.", "❌");
                 btn.disabled = false;
                 btn.innerText = "ENVIAR RESULTADOS";
             }
