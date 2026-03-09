@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coevaluación - Tec de Monterrey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Colores Institucionales Tec de Monterrey */
+        :root {
+            --tec-blue: #003399;
+            --tec-light-blue: #0056b3;
+            --tec-gray: #f4f4f4;
+        }
+
+        .step-content { display: none; }
+        .step-content.active { display: block; }
+        
+        .likert-grid {
+            display: grid;
+            grid-template-columns: 1.5fr repeat(5, 1fr);
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .bg-tec { background-color: var(--tec-blue); }
+        .text-tec { color: var(--tec-blue); }
+        .border-tec { border-color: var(--tec-blue); }
+        .focus-ring-tec:focus { --tw-ring-color: var(--tec-blue); }
+
+        @media (max-width: 768px) {
+            .likert-grid { grid-template-columns: 1fr; }
+            .likert-options {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+                background: #f8fafc;
+                padding: 1rem;
+                border-radius: 0.75rem;
+            }
+            .likert-label-mobile {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                font-size: 0.875rem;
+                color: #475569;
+            }
+        }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 text-slate-800">
+    <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+        <!-- Encabezado con Logo Tec -->
+        <div class="bg-white p-6 flex flex-col items-center border-b-4 border-[#003399]">
+            <img src="https://image.admisiones.tec.mx/lib/fe2b11747364057f721176/m/1/b910ad21-1913-4ce0-8f35-38c908814125.png" 
+                 alt="Tec de Monterrey" 
+                 class="h-16 md:h-20 object-contain mb-4">
+            <h1 class="text-xl md:text-2xl font-black text-[#003399] uppercase tracking-tight text-center">
+                Sistema de Coevaluación Académica
+            </h1>
+        </div>
+
+        <!-- Barra de Progreso Azul Tec -->
+        <div class="w-full bg-slate-200 h-2 overflow-hidden">
+            <div id="progressBar" class="bg-[#003399] h-full transition-all duration-700 ease-in-out" style="width: 10%"></div>
+        </div>
+
+        <form id="evaluationForm" class="p-8 md:p-12">
+            
+            <!-- PANTALLA 1: Configuración -->
+            <div id="step0" class="step-content active fade-in space-y-8">
+                <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100">
+                    <h2 class="text-xl font-bold text-[#003399] mb-6 flex items-center">
+                        <span class="bg-[#003399] text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
+                        Configuración del Equipo
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <div>
+                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Tamaño del equipo</label>
+                            <select name="tamanoEquipo" id="tamanoEquipo" class="w-full p-4 bg-white border-2 border-slate-200 rounded-xl focus:border-[#003399] outline-none transition font-bold text-slate-700">
+                                <option value="3">3 personas (evaluarás a 2)</option>
+                                <option value="4">4 personas (evaluarás a 3)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Número de Equipo</label>
+                            <div id="teamContainer" class="flex flex-wrap gap-3">
+                                <!-- JS genera los números aquí -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <button type="button" onclick="nextStep(1)" class="w-full bg-[#003399] hover:bg-[#002673] text-white font-black py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 uppercase tracking-widest text-sm">
+                        Comenzar Evaluación
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor para pasos de compañeros -->
+            <div id="dynamicSteps"></div>
+
+            <!-- PANTALLA FINAL: Envío -->
+            <div id="stepFinal" class="step-content fade-in space-y-8 text-center py-12">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-blue-50 text-[#003399] rounded-full text-5xl mb-4 shadow-inner">
+                    ✓
+                </div>
+                <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Evaluaciones Listas</h2>
+                <p class="text-slate-500 max-w-md mx-auto font-medium">
+                    Has concluido la calificación de tus compañeros. Al dar clic en enviar, los datos se registrarán en la base de datos institucional.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 max-w-sm mx-auto pt-8">
+                    <button type="button" onclick="prevStep()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-xl transition border border-slate-200">
+                        Revisar
+                    </button>
+                    <button type="submit" id="submitBtn" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.03]">
+                        ENVIAR RESULTADOS
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+        <!-- Mensajes de Estado Estilo Tec -->
+        <div id="statusMessage" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
+            <div class="bg-white p-10 rounded-3xl max-w-sm w-full text-center shadow-2xl border-t-8 border-[#003399]">
+                <div id="statusIcon" class="mb-6 text-6xl"></div>
+                <h3 id="statusTitle" class="text-2xl font-black mb-3 text-slate-800 uppercase tracking-tight"></h3>
+                <p id="statusDesc" class="text-slate-500 mb-8 font-medium leading-relaxed"></p>
+                <button onclick="closeStatus()" class="w-full bg-[#003399] hover:bg-[#002673] text-white py-4 rounded-xl font-black transition-colors uppercase tracking-widest text-xs">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * CONFIGURACIÓN: PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+         * Ejemplo: "https://script.google.com/macros/s/ABC123XYZ/exec"
+         */
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXKyd73pG7cqNCFFMgtUbDONOSWemIl0o5P24sPWixtSMNOx5PQNgG_hpn0gkj8Ta2/exec"; 
+        
+        const items = [
+            "Cumplió en tiempo y forma las actividades que le fueron asignadas",
+            "Fue puntual en las reuniones del grupo",
+            "Participó activamente en las reuniones",
+            "Se esmeró y mostró interés en la presentación del trabajo",
+            "Participó activamente en las sesiones En Vivo cuando tocaba participar el equipo en plenaria",
+            "Intervino voluntariamente durante las sesiones En Vivo, para exponer su punto de vista",
+            "Fundamentó sus opiniones en elementos teóricos y prácticos",
+            "Tuvo capacidad para reconocer sus errores"
+        ];
+
+        const likertScales = [
+            "Totalmente en desacuerdo", 
+            "En desacuerdo", 
+            "Neutral", 
+            "De acuerdo", 
+            "Totalmente de acuerdo"
+        ];
+
+        let currentStep = 0;
+        let totalSteps = 1;
+
+        // Generar botones de equipo con estilo Tec
+        const teamContainer = document.getElementById('teamContainer');
+        for(let i=1; i<=5; i++) {
+            teamContainer.innerHTML += `
+                <label class="relative flex items-center justify-center cursor-pointer group flex-1 min-w-[80px]">
+                    <input type="radio" name="equipo" value="${i}" required class="peer sr-only">
+                    <div class="w-full text-center px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-black text-slate-500 transition-all peer-checked:bg-[#003399] peer-checked:text-white peer-checked:border-[#003399] group-hover:border-blue-300">
+                        Eq ${i}
+                    </div>
+                </label>
+            `;
+        }
+
+        function createDynamicSteps() {
+            const tamano = parseInt(document.getElementById('tamanoEquipo').value);
+            const numAevaluar = tamano - 1;
+            const container = document.getElementById('dynamicSteps');
+            container.innerHTML = '';
+            totalSteps = numAevaluar + 1;
+
+            for (let i = 1; i <= numAevaluar; i++) {
+                const step = document.createElement('div');
+                step.id = `step${i}`;
+                step.className = 'step-content fade-in space-y-10';
+                
+                let html = `
+                    <div class="border-b-2 border-slate-100 pb-6 mb-8 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block">Fase de Evaluación</span>
+                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Evaluando al Compañero ${i}</h2>
+                        </div>
+                        <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
+                            <span class="text-sm font-black text-[#003399]">${i} de ${numAevaluar}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 shadow-inner">
+                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre del estudiante a evaluar:</label>
+                        <input type="text" name="nombre_companero_${i}" required 
+                               class="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-[#003399] transition font-bold" 
+                               placeholder="Ingrese nombre completo">
+                    </div>
+
+                    <div class="space-y-12">
+                `;
+
+                items.forEach((item, idx) => {
+                    html += `
+                        <div class="space-y-5 pb-8 border-b border-slate-50">
+                            <div class="likert-grid">
+                                <div class="text-base text-slate-700 font-bold leading-snug pr-6">
+                                    <span class="text-[#003399] opacity-30 mr-2 text-xl italic">${idx + 1}</span> ${item}
+                                </div>
+                                <div class="likert-options flex justify-between md:contents">
+                                    ${likertScales.map((label, sIdx) => `
+                                        <label class="flex flex-col items-center group cursor-pointer relative">
+                                            <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">
+                                                ${label}
+                                            </span>
+                                            
+                                            <div class="md:hidden likert-label-mobile w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
+                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required 
+                                                    onchange="toggleRetro(${i}, ${idx}, this.value)"
+                                                    class="w-5 h-5 text-[#003399] focus:ring-[#003399] border-slate-300">
+                                                <span class="font-bold text-slate-600 ml-2">${label}</span>
+                                            </div>
+
+                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required 
+                                                onchange="toggleRetro(${i}, ${idx}, this.value)"
+                                                class="hidden md:block w-7 h-7 text-[#003399] focus:ring-[#003399] border-slate-300 cursor-pointer transform hover:scale-125 transition-transform shadow-sm">
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            
+                            <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
+                                <label class="block text-xs font-black text-red-700 mb-3 uppercase tracking-widest">⚠️ Justificación del puntaje mínimo:</label>
+                                <textarea name="retro_c${i}_item${idx}" 
+                                          class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" 
+                                          rows="2" 
+                                          placeholder="Describa el motivo del desacuerdo..."></textarea>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    </div>
+                    <div class="flex flex-col sm:flex-row gap-4 pt-10">
+                        <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">
+                            Regresar
+                        </button>
+                        <button type="button" onclick="nextStep(${i + 1})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
+                            Siguiente Paso
+                        </button>
+                    </div>
+                `;
+                step.innerHTML = html;
+                container.appendChild(step);
+            }
+        }
+
+        function toggleRetro(companero, item, valor) {
+            const div = document.getElementById(`retro_c${companero}_item${item}`);
+            const textarea = div.querySelector('textarea');
+            if (valor == "1") { 
+                div.classList.remove('hidden');
+                textarea.required = true;
+                textarea.focus();
+            } else {
+                div.classList.add('hidden');
+                textarea.required = false;
+                textarea.value = "";
+            }
+        }
+
+        function updateProgress() {
+            const total = totalSteps + 1;
+            const progress = ((currentStep) / (total - 1)) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function nextStep(target) {
+            const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
+            const inputs = currentEl.querySelectorAll('input[required], select[required], textarea[required]');
+            let valid = true;
+            
+            const radioGroups = new Set();
+            currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
+            
+            radioGroups.forEach(name => {
+                if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false;
+            });
+
+            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => {
+                if(!input.value.trim()) valid = false;
+            });
+
+            if(!valid) {
+                showStatus("Campos Faltantes", "Para asegurar la validez académica, todas las preguntas deben ser respondidas.", "⚠️");
+                return;
+            }
+
+            if(currentStep === 0) createDynamicSteps();
+
+            currentEl.classList.remove('active');
+            currentStep = target === (totalSteps + 1) ? 'Final' : target;
+            
+            const nextEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
+            nextEl.classList.add('active');
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function prevStep() {
+            const target = currentStep === 'Final' ? totalSteps : currentStep - 1;
+            document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`).classList.remove('active');
+            currentStep = target;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('evaluationForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            btn.disabled = true;
+            btn.innerText = "ENVIANDO...";
+
+            try {
+                if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === "") {
+                    showStatus("Error de Configuración", "Falta la URL del Google Apps Script en el código.", "🎓");
+                    btn.disabled = false;
+                    btn.innerText = "ENVIAR RESULTADOS";
+                    return;
+                }
+
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                showStatus("Envío Exitoso", "Tus evaluaciones han sido registradas en el sistema institucional.", "✅");
+                setTimeout(() => location.reload(), 4000);
+            } catch (error) {
+                showStatus("Error de Conexión", "No se pudo establecer conexión con el servidor. Inténtalo de nuevo.", "❌");
+                btn.disabled = false;
+                btn.innerText = "ENVIAR RESULTADOS";
+            }
+        };
+
+        function showStatus(title, desc, icon) {
+            document.getElementById('statusTitle').innerText = title;
+            document.getElementById('statusDesc').innerText = desc;
+            document.getElementById('statusIcon').innerText = icon;
+            document.getElementById('statusMessage').classList.remove('hidden');
+        }
+
+        function closeStatus() {
+            document.getElementById('statusMessage').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
