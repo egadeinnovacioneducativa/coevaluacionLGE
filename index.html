@@ -39,7 +39,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8 text-slate-800">
     <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
-        <!-- Encabezado -->
+        <!-- Encabezado con Logo -->
         <div class="bg-white p-6 flex flex-col items-center border-b-4 border-[#003399]">
             <img src="https://image.admisiones.tec.mx/lib/fe2b11747364057f721176/m/1/b910ad21-1913-4ce0-8f35-38c908814125.png" 
                  alt="Tec de Monterrey" 
@@ -68,8 +68,8 @@
                         <div>
                             <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">¿A cuántos compañeros evaluarás?</label>
                             <select name="tamanoEquipo" id="tamanoEquipo" class="w-full p-4 bg-white border-2 border-slate-200 rounded-xl focus:border-[#003399] outline-none transition font-bold text-slate-700">
-                                <option value="2">2 compañeros (Equipo de 3)</option>
-                                <option value="3" selected>3 compañeros (Equipo de 4)</option>
+                                <option value="2">2 compañeros</option>
+                                <option value="3" selected>3 compañeros</option>
                             </select>
                         </div>
 
@@ -99,7 +99,7 @@
                 </div>
                 <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Revisiones Finalizadas</h2>
                 <p class="text-slate-500 max-w-md mx-auto font-medium">
-                    Haz revisado a todos tus compañeros. Al dar clic en enviar, los resultados se guardarán en la hoja de cálculo institucional.
+                    Has revisado a todos tus compañeros. Al dar clic en enviar, los resultados se guardarán en la hoja de cálculo institucional.
                 </p>
                 
                 <div class="flex flex-col sm:flex-row gap-4 max-w-sm mx-auto pt-8">
@@ -107,13 +107,13 @@
                         Revisar
                     </button>
                     <button type="submit" id="submitBtn" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.03]">
-                        ENVIAR AHORA
+                        ENVIAR RESULTADOS
                     </button>
                 </div>
             </div>
         </form>
 
-        <!-- Modales de Estado -->
+        <!-- Mensajes de Estado -->
         <div id="statusMessage" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
             <div class="bg-white p-10 rounded-3xl max-w-sm w-full text-center shadow-2xl border-t-8 border-[#003399]">
                 <div id="statusIcon" class="mb-6 text-6xl"></div>
@@ -126,7 +126,7 @@
 
     <script>
         /**
-         * CONFIGURACIÓN: PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ
+         * CONFIGURACIÓN: REEMPLAZA CON TU URL DE GOOGLE APPS SCRIPT
          */
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykG4NEvAhGMn164J1TwSQc9ZkYYMkaOmvL9xnrk5ltg17RxkzVVGMXtkzMqsPO8Dts/exec"; 
         
@@ -146,7 +146,7 @@
         let currentStep = 0;
         let totalSteps = 0;
 
-        // Generar números de equipo
+        // Generar selectores de equipo
         const teamContainer = document.getElementById('teamContainer');
         for(let i=1; i<=10; i++) {
             teamContainer.innerHTML += `
@@ -159,19 +159,20 @@
             `;
         }
 
-        // Función para mostrar/ocultar caja de retroalimentación
-        function toggleRetro(companero, item, valor) {
+        // Función para mostrar/ocultar la caja de justificación
+        window.toggleRetro = function(companero, item, valor) {
             const div = document.getElementById(`retro_c${companero}_item${item}`);
             const textarea = div.querySelector('textarea');
-            if (valor == "1") { // "Totalmente en desacuerdo"
+            if (valor == "1") { 
                 div.classList.remove('hidden');
                 textarea.required = true;
+                textarea.focus();
             } else {
                 div.classList.add('hidden');
                 textarea.required = false;
                 textarea.value = "";
             }
-        }
+        };
 
         function createDynamicSteps() {
             const numAevaluar = parseInt(document.getElementById('tamanoEquipo').value);
@@ -187,18 +188,18 @@
                 let html = `
                     <div class="border-b-2 border-slate-100 pb-6 mb-8 flex justify-between items-center">
                         <div>
-                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block">Evaluación de Pares</span>
-                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Compañero ${i}</h2>
+                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block">Fase de Evaluación</span>
+                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Evaluando al Compañero ${i}</h2>
                         </div>
                         <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
                             <span class="text-sm font-black text-[#003399]">${i} de ${numAevaluar}</span>
                         </div>
                     </div>
                     <div class="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 shadow-inner">
-                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre completo del evaluado:</label>
+                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre del compañero:</label>
                         <input type="text" name="nombre_companero_${i}" required 
                                class="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-[#003399] transition font-bold" 
-                               placeholder="Nombre del compañero">
+                               placeholder="Nombre completo">
                     </div>
                     <div class="space-y-12">
                 `;
@@ -214,18 +215,22 @@
                                     ${likertScales.map((label, sIdx) => `
                                         <label class="flex flex-col items-center group cursor-pointer relative">
                                             <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">${label}</span>
+                                            
+                                            <!-- Versión móvil -->
                                             <div class="md:hidden flex items-center gap-3 w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
-                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="w-5 h-5">
+                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="w-5 h-5 accent-[#003399]">
                                                 <span class="font-bold text-slate-600">${label}</span>
                                             </div>
-                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="hidden md:block w-7 h-7 text-[#003399] cursor-pointer shadow-sm">
+
+                                            <!-- Versión escritorio -->
+                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="hidden md:block w-7 h-7 accent-[#003399] cursor-pointer shadow-sm">
                                         </label>
                                     `).join('')}
                                 </div>
                             </div>
-                            <!-- Caja de Justificación -->
+                            <!-- Caja de Justificación (se activa con valor 1) -->
                             <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
-                                <label class="block text-xs font-black text-red-700 mb-2 uppercase tracking-widest">⚠️ Justificación requerida:</label>
+                                <label class="block text-xs font-black text-red-700 mb-2 uppercase tracking-widest font-bold">⚠️ Justificación Requerida:</label>
                                 <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" rows="2" placeholder="Explique por qué marcó 'Totalmente en desacuerdo'..."></textarea>
                             </div>
                         </div>
@@ -235,9 +240,9 @@
                 html += `
                     </div>
                     <div class="flex flex-col sm:flex-row gap-4 pt-10">
-                        <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">Regresar</button>
+                        <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">Atrás</button>
                         <button type="button" onclick="nextStep(${i + 1})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
-                            ${i === numAevaluar ? 'Finalizar' : 'Siguiente Compañero'}
+                            ${i === numAevaluar ? 'Finalizar' : 'Siguiente'}
                         </button>
                     </div>
                 `;
@@ -257,18 +262,16 @@
             const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
             let valid = true;
             
-            // Validar radios, textos y textareas de retroalimentación
             const radioGroups = new Set();
             currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
             radioGroups.forEach(name => { if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false; });
             
-            // Validar inputs de texto y áreas de texto (justificaciones)
             currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => { 
                 if(!input.value.trim()) valid = false; 
             });
 
             if(!valid) {
-                showStatus("Faltan datos", "Por favor, completa todas las respuestas y justificaciones antes de avanzar.", "⚠️");
+                showStatus("Faltan datos", "Completa todas las evaluaciones y justificaciones para continuar.", "⚠️");
                 return;
             }
 
@@ -292,7 +295,7 @@
         document.getElementById('evaluationForm').onsubmit = async function(e) {
             e.preventDefault();
             if (!GOOGLE_SCRIPT_URL) {
-                showStatus("Configuración pendiente", "Falta la URL de envío de Google Sheets.", "📋");
+                showStatus("Error", "Falta configurar la URL de Google Sheets.", "📋");
                 return;
             }
             if (isSubmitting) return;
@@ -313,12 +316,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                showStatus("¡Éxito!", "Tus evaluaciones se han registrado correctamente.", "✅");
+                showStatus("¡Éxito!", "La coevaluación se ha enviado correctamente.", "✅");
                 setTimeout(() => location.reload(), 3000);
             } catch (error) {
-                showStatus("Error", "No se pudo conectar con el servidor. Intenta de nuevo.", "❌");
+                showStatus("Error", "No se pudo enviar. Intenta de nuevo.", "❌");
                 btn.disabled = false;
-                btn.innerText = "ENVIAR AHORA";
+                btn.innerText = "ENVIAR RESULTADOS";
                 isSubmitting = false;
             }
         };
