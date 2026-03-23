@@ -128,7 +128,7 @@
         /**
          * CONFIGURACIÓN: PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ
          */
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH70E9Y22JPxmrU0vDB_bQPjBSub5nBToaDR1_pc744RCleADa-UX3xIWWw6WxwLjg/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykG4NEvAhGMn164J1TwSQc9ZkYYMkaOmvL9xnrk5ltg17RxkzVVGMXtkzMqsPO8Dts/exec"; 
         
         let isSubmitting = false;
         const items = [
@@ -157,6 +157,20 @@
                     </div>
                 </label>
             `;
+        }
+
+        // Función para mostrar/ocultar caja de retroalimentación
+        function toggleRetro(companero, item, valor) {
+            const div = document.getElementById(`retro_c${companero}_item${item}`);
+            const textarea = div.querySelector('textarea');
+            if (valor == "1") { // "Totalmente en desacuerdo"
+                div.classList.remove('hidden');
+                textarea.required = true;
+            } else {
+                div.classList.add('hidden');
+                textarea.required = false;
+                textarea.value = "";
+            }
         }
 
         function createDynamicSteps() {
@@ -201,13 +215,18 @@
                                         <label class="flex flex-col items-center group cursor-pointer relative">
                                             <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">${label}</span>
                                             <div class="md:hidden flex items-center gap-3 w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
-                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required class="w-5 h-5">
+                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="w-5 h-5">
                                                 <span class="font-bold text-slate-600">${label}</span>
                                             </div>
-                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required class="hidden md:block w-7 h-7 text-[#003399] cursor-pointer shadow-sm">
+                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="hidden md:block w-7 h-7 text-[#003399] cursor-pointer shadow-sm">
                                         </label>
                                     `).join('')}
                                 </div>
+                            </div>
+                            <!-- Caja de Justificación -->
+                            <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
+                                <label class="block text-xs font-black text-red-700 mb-2 uppercase tracking-widest">⚠️ Justificación requerida:</label>
+                                <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" rows="2" placeholder="Explique por qué marcó 'Totalmente en desacuerdo'..."></textarea>
                             </div>
                         </div>
                     `;
@@ -238,14 +257,18 @@
             const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
             let valid = true;
             
-            // Validar radios y textos
+            // Validar radios, textos y textareas de retroalimentación
             const radioGroups = new Set();
             currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
             radioGroups.forEach(name => { if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false; });
-            currentEl.querySelectorAll('input[type="text"][required]').forEach(input => { if(!input.value.trim()) valid = false; });
+            
+            // Validar inputs de texto y áreas de texto (justificaciones)
+            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => { 
+                if(!input.value.trim()) valid = false; 
+            });
 
             if(!valid) {
-                showStatus("Faltan datos", "Por favor, responde todas las preguntas antes de avanzar.", "⚠️");
+                showStatus("Faltan datos", "Por favor, completa todas las respuestas y justificaciones antes de avanzar.", "⚠️");
                 return;
             }
 
