@@ -24,22 +24,21 @@
 
         @media (max-width: 768px) {
             .likert-grid { grid-template-columns: 1fr; }
-            .likert-options {
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                background: #f8fafc;
-                padding: 1rem;
-                border-radius: 0.75rem;
-            }
         }
+
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Estilo personalizado para los radio buttons */
+        input[type="radio"] {
+            cursor: pointer;
+            accent-color: #003399;
+        }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8 text-slate-800">
     <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
-        <!-- Encabezado con Logo -->
+        <!-- Encabezado -->
         <div class="bg-white p-6 flex flex-col items-center border-b-4 border-[#003399]">
             <img src="https://image.admisiones.tec.mx/lib/fe2b11747364057f721176/m/1/b910ad21-1913-4ce0-8f35-38c908814125.png" 
                  alt="Tec de Monterrey" 
@@ -75,9 +74,7 @@
 
                         <div>
                             <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Número de Equipo</label>
-                            <div id="teamContainer" class="grid grid-cols-5 gap-2">
-                                <!-- Generado por JS -->
-                            </div>
+                            <div id="teamContainer" class="grid grid-cols-5 gap-2"></div>
                         </div>
                     </div>
                 </div>
@@ -89,17 +86,17 @@
                 </div>
             </div>
 
-            <!-- Contenedor para Pasos Dinámicos (Compañeros) -->
+            <!-- Contenedor para Pasos Dinámicos -->
             <div id="dynamicSteps"></div>
 
-            <!-- PASO FINAL: Confirmación y Envío -->
+            <!-- PASO FINAL: Confirmación -->
             <div id="stepFinal" class="step-content fade-in space-y-8 text-center py-12">
                 <div class="inline-flex items-center justify-center w-24 h-24 bg-blue-50 text-[#003399] rounded-full text-5xl mb-4 shadow-inner">
                     ✓
                 </div>
                 <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Revisiones Finalizadas</h2>
                 <p class="text-slate-500 max-w-md mx-auto font-medium">
-                    Has revisado a todos tus compañeros. Al dar clic en enviar, los resultados se guardarán en la hoja de cálculo institucional.
+                    Has revisado a todos tus compañeros. Al dar clic en enviar, los resultados se guardarán en la hoja de cálculo.
                 </p>
                 
                 <div class="flex flex-col sm:flex-row gap-4 max-w-sm mx-auto pt-8">
@@ -125,10 +122,7 @@
     </div>
 
     <script>
-        /**
-         * CONFIGURACIÓN: REEMPLAZA CON TU URL DE GOOGLE APPS SCRIPT
-         */
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykG4NEvAhGMn164J1TwSQc9ZkYYMkaOmvL9xnrk5ltg17RxkzVVGMXtkzMqsPO8Dts/exec"; 
+        const GOOGLE_SCRIPT_URL = ""; 
         
         let isSubmitting = false;
         const items = [
@@ -146,7 +140,7 @@
         let currentStep = 0;
         let totalSteps = 0;
 
-        // Generar selectores de equipo
+        // Generar números de equipo
         const teamContainer = document.getElementById('teamContainer');
         for(let i=1; i<=10; i++) {
             teamContainer.innerHTML += `
@@ -159,14 +153,16 @@
             `;
         }
 
-        // Función para mostrar/ocultar la caja de justificación
+        // Función corregida para mostrar retroalimentación
         window.toggleRetro = function(companero, item, valor) {
-            const div = document.getElementById(`retro_c${companero}_item${item}`);
+            const divId = `retro_c${companero}_item${item}`;
+            const div = document.getElementById(divId);
+            if (!div) return;
+
             const textarea = div.querySelector('textarea');
             if (valor == "1") { 
                 div.classList.remove('hidden');
                 textarea.required = true;
-                textarea.focus();
             } else {
                 div.classList.add('hidden');
                 textarea.required = false;
@@ -204,31 +200,39 @@
                     <div class="space-y-12">
                 `;
 
-                items.forEach((item, idx) => {
+                items.forEach((itemText, idx) => {
                     html += `
                         <div class="space-y-5 pb-8 border-b border-slate-50">
                             <div class="likert-grid">
                                 <div class="text-base text-slate-700 font-bold leading-snug pr-6">
-                                    <span class="text-[#003399] opacity-30 mr-2 text-xl italic">${idx + 1}</span> ${item}
+                                    <span class="text-[#003399] opacity-30 mr-2 text-xl italic">${idx + 1}</span> ${itemText}
                                 </div>
-                                <div class="likert-options flex justify-between md:contents">
-                                    ${likertScales.map((label, sIdx) => `
-                                        <label class="flex flex-col items-center group cursor-pointer relative">
-                                            <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">${label}</span>
+                                
+                                <!-- Opciones Likert Optimizadas -->
+                                <div class="flex flex-col md:flex-row md:contents gap-2">
+                                    ${likertScales.map((label, sIdx) => {
+                                        const val = sIdx + 1;
+                                        return `
+                                        <label class="flex flex-row md:flex-col items-center gap-3 md:gap-0 group cursor-pointer p-3 md:p-0 rounded-xl border-2 border-transparent md:border-none hover:bg-blue-50 md:hover:bg-transparent transition">
+                                            <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">
+                                                ${label}
+                                            </span>
                                             
-                                            <!-- Versión móvil -->
-                                            <div class="md:hidden flex items-center gap-3 w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
-                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="w-5 h-5 accent-[#003399]">
-                                                <span class="font-bold text-slate-600">${label}</span>
-                                            </div>
-
-                                            <!-- Versión escritorio -->
-                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="hidden md:block w-7 h-7 accent-[#003399] cursor-pointer shadow-sm">
+                                            <input type="radio" 
+                                                   name="c${i}_item${idx}" 
+                                                   value="${val}" 
+                                                   required 
+                                                   onchange="window.toggleRetro(${i}, ${idx}, this.value)" 
+                                                   class="w-6 h-6 md:w-7 md:h-7 accent-[#003399]">
+                                            
+                                            <span class="md:hidden font-bold text-slate-600 text-sm italic">${label}</span>
                                         </label>
-                                    `).join('')}
+                                        `;
+                                    }).join('')}
                                 </div>
                             </div>
-                            <!-- Caja de Justificación (se activa con valor 1) -->
+
+                            <!-- Caja de Justificación -->
                             <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
                                 <label class="block text-xs font-black text-red-700 mb-2 uppercase tracking-widest font-bold">⚠️ Justificación Requerida:</label>
                                 <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" rows="2" placeholder="Explique por qué marcó 'Totalmente en desacuerdo'..."></textarea>
