@@ -6,7 +6,6 @@
     <title>Coevaluación - Tec de Monterrey</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Colores Institucionales Tec de Monterrey */
         :root {
             --tec-blue: #003399;
             --tec-light-blue: #0056b3;
@@ -23,11 +22,6 @@
             align-items: center;
         }
 
-        .bg-tec { background-color: var(--tec-blue); }
-        .text-tec { color: var(--tec-blue); }
-        .border-tec { border-color: var(--tec-blue); }
-        .focus-ring-tec:focus { --tw-ring-color: var(--tec-blue); }
-
         @media (max-width: 768px) {
             .likert-grid { grid-template-columns: 1fr; }
             .likert-options {
@@ -38,13 +32,6 @@
                 padding: 1rem;
                 border-radius: 0.75rem;
             }
-            .likert-label-mobile {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                font-size: 0.875rem;
-                color: #475569;
-            }
         }
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -52,7 +39,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen p-4 md:p-8 text-slate-800">
     <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
-        <!-- Encabezado con Logo Tec -->
+        <!-- Encabezado -->
         <div class="bg-white p-6 flex flex-col items-center border-b-4 border-[#003399]">
             <img src="https://image.admisiones.tec.mx/lib/fe2b11747364057f721176/m/1/b910ad21-1913-4ce0-8f35-38c908814125.png" 
                  alt="Tec de Monterrey" 
@@ -62,14 +49,14 @@
             </h1>
         </div>
 
-        <!-- Barra de Progreso Azul Tec -->
+        <!-- Barra de Progreso -->
         <div class="w-full bg-slate-200 h-2 overflow-hidden">
             <div id="progressBar" class="bg-[#003399] h-full transition-all duration-700 ease-in-out" style="width: 10%"></div>
         </div>
 
         <form id="evaluationForm" class="p-8 md:p-12">
             
-            <!-- PANTALLA 1: Configuración -->
+            <!-- PASO 0: Configuración Inicial -->
             <div id="step0" class="step-content active fade-in space-y-8">
                 <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100">
                     <h2 class="text-xl font-bold text-[#003399] mb-6 flex items-center">
@@ -79,17 +66,17 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                         <div>
-                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Tamaño del equipo</label>
+                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">¿A cuántos compañeros evaluarás?</label>
                             <select name="tamanoEquipo" id="tamanoEquipo" class="w-full p-4 bg-white border-2 border-slate-200 rounded-xl focus:border-[#003399] outline-none transition font-bold text-slate-700">
-                                <option value="3">3 personas (evaluarás a 2)</option>
-                                <option value="4">4 personas (evaluarás a 3)</option>
+                                <option value="2">2 compañeros (Equipo de 3)</option>
+                                <option value="3" selected>3 compañeros (Equipo de 4)</option>
                             </select>
                         </div>
 
                         <div>
                             <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Número de Equipo</label>
                             <div id="teamContainer" class="grid grid-cols-5 gap-2">
-                                <!-- JS genera los números aquí -->
+                                <!-- Generado por JS -->
                             </div>
                         </div>
                     </div>
@@ -102,17 +89,17 @@
                 </div>
             </div>
 
-            <!-- Contenedor para pasos de compañeros -->
+            <!-- Contenedor para Pasos Dinámicos (Compañeros) -->
             <div id="dynamicSteps"></div>
 
-            <!-- PANTALLA FINAL: Envío -->
+            <!-- PASO FINAL: Confirmación y Envío -->
             <div id="stepFinal" class="step-content fade-in space-y-8 text-center py-12">
                 <div class="inline-flex items-center justify-center w-24 h-24 bg-blue-50 text-[#003399] rounded-full text-5xl mb-4 shadow-inner">
                     ✓
                 </div>
-                <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Evaluaciones Listas</h2>
+                <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Revisiones Finalizadas</h2>
                 <p class="text-slate-500 max-w-md mx-auto font-medium">
-                    Has concluido la calificación de tus compañeros. Al dar clic en enviar, los datos se registrarán en la base de datos institucional.
+                    Haz revisado a todos tus compañeros. Al dar clic en enviar, los resultados se guardarán en la hoja de cálculo institucional.
                 </p>
                 
                 <div class="flex flex-col sm:flex-row gap-4 max-w-sm mx-auto pt-8">
@@ -120,14 +107,13 @@
                         Revisar
                     </button>
                     <button type="submit" id="submitBtn" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.03]">
-                        ENVIAR RESULTADOS
+                        ENVIAR AHORA
                     </button>
                 </div>
             </div>
-
         </form>
 
-        <!-- Mensajes de Estado Estilo Tec -->
+        <!-- Modales de Estado -->
         <div id="statusMessage" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
             <div class="bg-white p-10 rounded-3xl max-w-sm w-full text-center shadow-2xl border-t-8 border-[#003399]">
                 <div id="statusIcon" class="mb-6 text-6xl"></div>
@@ -138,18 +124,13 @@
         </div>
     </div>
 
-    <!-- Iframe invisible para el envío de datos alternativo -->
-    <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-
     <script>
         /**
-         * CONFIGURACIÓN: PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+         * CONFIGURACIÓN: PEGA TU URL DE GOOGLE APPS SCRIPT AQUÍ
          */
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwXKyd73pG7cqNCFFMgtUbDONOSWemIl0o5P24sPWixtSMNOx5PQNgG_hpn0gkj8Ta2/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzH70E9Y22JPxmrU0vDB_bQPjBSub5nBToaDR1_pc744RCleADa-UX3xIWWw6WxwLjg/exec"; 
         
-        // Variable definida globalmente para evitar ReferenceError
         let isSubmitting = false;
-
         const items = [
             "Cumplió en tiempo y forma las actividades que le fueron asignadas",
             "Fue puntual en las reuniones del grupo",
@@ -162,12 +143,12 @@
         ];
 
         const likertScales = ["Totalmente en desacuerdo", "En desacuerdo", "Neutral", "De acuerdo", "Totalmente de acuerdo"];
-
         let currentStep = 0;
-        let totalSteps = 1;
+        let totalSteps = 0;
 
+        // Generar números de equipo
         const teamContainer = document.getElementById('teamContainer');
-        for(let i=1; i<=5; i++) {
+        for(let i=1; i<=10; i++) {
             teamContainer.innerHTML += `
                 <label class="relative flex items-center justify-center cursor-pointer group w-full">
                     <input type="radio" name="equipo" value="${i}" required class="peer sr-only">
@@ -179,8 +160,7 @@
         }
 
         function createDynamicSteps() {
-            const tamano = parseInt(document.getElementById('tamanoEquipo').value);
-            const numAevaluar = tamano - 1;
+            const numAevaluar = parseInt(document.getElementById('tamanoEquipo').value);
             const container = document.getElementById('dynamicSteps');
             container.innerHTML = '';
             totalSteps = numAevaluar;
@@ -193,18 +173,18 @@
                 let html = `
                     <div class="border-b-2 border-slate-100 pb-6 mb-8 flex justify-between items-center">
                         <div>
-                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block">Fase de Evaluación</span>
-                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Evaluando al Compañero ${i}</h2>
+                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block">Evaluación de Pares</span>
+                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Compañero ${i}</h2>
                         </div>
                         <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
                             <span class="text-sm font-black text-[#003399]">${i} de ${numAevaluar}</span>
                         </div>
                     </div>
                     <div class="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 shadow-inner">
-                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre del estudiante a evaluar:</label>
+                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre completo del evaluado:</label>
                         <input type="text" name="nombre_companero_${i}" required 
                                class="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-[#003399] transition font-bold" 
-                               placeholder="Ingrese nombre completo">
+                               placeholder="Nombre del compañero">
                     </div>
                     <div class="space-y-12">
                 `;
@@ -220,18 +200,14 @@
                                     ${likertScales.map((label, sIdx) => `
                                         <label class="flex flex-col items-center group cursor-pointer relative">
                                             <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">${label}</span>
-                                            <div class="md:hidden likert-label-mobile w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
-                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="w-5 h-5 text-[#003399] focus:ring-[#003399] border-slate-300">
-                                                <span class="font-bold text-slate-600 ml-2">${label}</span>
+                                            <div class="md:hidden flex items-center gap-3 w-full p-4 rounded-xl border-2 border-slate-100 hover:bg-blue-50 transition mb-2">
+                                                <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required class="w-5 h-5">
+                                                <span class="font-bold text-slate-600">${label}</span>
                                             </div>
-                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required onchange="toggleRetro(${i}, ${idx}, this.value)" class="hidden md:block w-7 h-7 text-[#003399] focus:ring-[#003399] border-slate-300 cursor-pointer transform hover:scale-125 transition-transform shadow-sm">
+                                            <input type="radio" name="c${i}_item${idx}" value="${sIdx + 1}" required class="hidden md:block w-7 h-7 text-[#003399] cursor-pointer shadow-sm">
                                         </label>
                                     `).join('')}
                                 </div>
-                            </div>
-                            <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
-                                <label class="block text-xs font-black text-red-700 mb-3 uppercase tracking-widest">⚠️ Justificación del puntaje mínimo:</label>
-                                <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" rows="2" placeholder="Describa el motivo del desacuerdo..."></textarea>
                             </div>
                         </div>
                     `;
@@ -242,25 +218,12 @@
                     <div class="flex flex-col sm:flex-row gap-4 pt-10">
                         <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">Regresar</button>
                         <button type="button" onclick="nextStep(${i + 1})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
-                            ${i === numAevaluar ? 'Finalizar Revisión' : 'Siguiente Compañero'}
+                            ${i === numAevaluar ? 'Finalizar' : 'Siguiente Compañero'}
                         </button>
                     </div>
                 `;
                 step.innerHTML = html;
                 container.appendChild(step);
-            }
-        }
-
-        function toggleRetro(companero, item, valor) {
-            const div = document.getElementById(`retro_c${companero}_item${item}`);
-            const textarea = div.querySelector('textarea');
-            if (valor == "1") { 
-                div.classList.remove('hidden');
-                textarea.required = true;
-            } else {
-                div.classList.add('hidden');
-                textarea.required = false;
-                textarea.value = "";
             }
         }
 
@@ -274,21 +237,23 @@
         function nextStep(target) {
             const currentEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
             let valid = true;
+            
+            // Validar radios y textos
             const radioGroups = new Set();
             currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
             radioGroups.forEach(name => { if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false; });
-            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => { if(!input.value.trim()) valid = false; });
+            currentEl.querySelectorAll('input[type="text"][required]').forEach(input => { if(!input.value.trim()) valid = false; });
 
             if(!valid) {
-                showStatus("Campos Faltantes", "Por favor completa todos los campos requeridos antes de continuar.", "⚠️");
+                showStatus("Faltan datos", "Por favor, responde todas las preguntas antes de avanzar.", "⚠️");
                 return;
             }
 
             if(currentStep === 0) createDynamicSteps();
+            
             currentEl.classList.remove('active');
             currentStep = (target > totalSteps) ? 'Final' : target;
-            const nextEl = document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`);
-            nextEl.classList.add('active');
+            document.getElementById(currentStep === 'Final' ? 'stepFinal' : `step${currentStep}`).classList.add('active');
             updateProgress();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -303,24 +268,21 @@
 
         document.getElementById('evaluationForm').onsubmit = async function(e) {
             e.preventDefault();
-            
             if (!GOOGLE_SCRIPT_URL) {
-                showStatus("Falta Configuración", "La URL de Google Sheets no ha sido configurada.", "📋");
+                showStatus("Configuración pendiente", "Falta la URL de envío de Google Sheets.", "📋");
                 return;
             }
-
             if (isSubmitting) return;
-            isSubmitting = true;
 
+            isSubmitting = true;
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerText = "ENVIANDO DATOS...";
+            btn.innerText = "ENVIANDO...";
 
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
 
             try {
-                // Envío mediante fetch con modo no-cors
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -328,24 +290,15 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
-                handleSuccess();
+                showStatus("¡Éxito!", "Tus evaluaciones se han registrado correctamente.", "✅");
+                setTimeout(() => location.reload(), 3000);
             } catch (error) {
-                console.error("Error de envío:", error);
-                showStatus("Error al enviar", "Hubo un problema de conexión. Inténtalo de nuevo.", "❌");
+                showStatus("Error", "No se pudo conectar con el servidor. Intenta de nuevo.", "❌");
                 btn.disabled = false;
-                btn.innerText = "ENVIAR RESULTADOS";
+                btn.innerText = "ENVIAR AHORA";
                 isSubmitting = false;
             }
         };
-
-        function handleSuccess() {
-            showStatus("Envío Completado", "Tu evaluación ha sido registrada exitosamente.", "✅");
-            setTimeout(() => {
-                isSubmitting = false;
-                location.reload();
-            }, 3000);
-        }
 
         function showStatus(title, desc, icon) {
             document.getElementById('statusTitle').innerText = title;
@@ -360,4 +313,3 @@
     </script>
 </body>
 </html>
-
