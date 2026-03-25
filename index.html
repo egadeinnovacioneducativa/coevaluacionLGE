@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coevaluación - Tec de Monterrey</title>
+    <title>Coevaluación - EGADE Business School</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -34,7 +34,6 @@
             accent-color: #003399;
         }
 
-        /* Spinner para carga */
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #003399;
@@ -47,8 +46,8 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8 text-slate-800">
-    <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200">
+<body class="bg-slate-100 min-h-screen p-4 md:p-8 text-slate-800 flex flex-col">
+    <div class="max-w-5xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-slate-200 w-full mb-8">
         <!-- Encabezado -->
         <div class="bg-white p-6 flex flex-col items-center border-b-4 border-[#003399]">
             <img src="https://image.admisiones.tec.mx/lib/fe2b11747364057f721176/m/1/b910ad21-1913-4ce0-8f35-38c908814125.png" 
@@ -71,27 +70,22 @@
                 <div class="bg-blue-50 p-8 rounded-3xl border border-blue-100">
                     <h2 class="text-xl font-bold text-[#003399] mb-6 flex items-center">
                         <span class="bg-[#003399] text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm font-bold">1</span>
-                        Configuración del Equipo
+                        Selecciona tu Equipo
                     </h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div>
-                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">¿A cuántos compañeros evaluarás?</label>
-                            <select name="tamanoEquipo" id="tamanoEquipo" class="w-full p-4 bg-white border-2 border-slate-200 rounded-xl focus:border-[#003399] outline-none transition font-bold text-slate-700">
-                                <option value="2">2 compañeros</option>
-                                <option value="3" selected>3 compañeros</option>
-                            </select>
+                    <div class="space-y-6">
+                        <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest text-center">Número de Equipo</label>
+                        <div id="teamContainer" class="grid grid-cols-5 gap-3 max-w-md mx-auto">
+                            <!-- JS genera los equipos 1 al 5 -->
                         </div>
-
-                        <div>
-                            <label class="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Número de Equipo</label>
-                            <div id="teamContainer" class="grid grid-cols-5 gap-2"></div>
-                        </div>
+                        <p class="text-center text-xs text-slate-400 italic mt-4">
+                            * El sistema ajustará automáticamente el número de integrantes según tu equipo.
+                        </p>
                     </div>
                 </div>
 
                 <div class="pt-6">
-                    <button type="button" onclick="nextStep(1)" class="w-full bg-[#003399] hover:bg-[#002673] text-white font-black py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 uppercase tracking-widest text-sm">
+                    <button type="button" onclick="initEvaluation()" class="w-full bg-[#003399] hover:bg-[#002673] text-white font-black py-5 rounded-2xl shadow-xl transition-all transform hover:-translate-y-1 active:scale-95 uppercase tracking-widest text-sm">
                         Comenzar Evaluación
                     </button>
                 </div>
@@ -101,7 +95,7 @@
             <div id="dynamicSteps"></div>
         </form>
 
-        <!-- Mensajes de Estado y Pantalla de Carga -->
+        <!-- Mensajes de Estado -->
         <div id="statusMessage" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
             <div id="statusCard" class="bg-white p-10 rounded-3xl max-w-sm w-full text-center shadow-2xl border-t-8 border-[#003399]">
                 <div id="loadingIndicator" class="hidden"><div class="loader"></div></div>
@@ -113,8 +107,13 @@
         </div>
     </div>
 
+    <!-- Footer Legal -->
+    <footer class="text-center text-slate-400 text-[10px] uppercase tracking-[0.3em] font-bold pb-8">
+        EGADE Business School - Innovación Curricular - 2026
+    </footer>
+
     <script>
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykG4NEvAhGMn164J1TwSQc9ZkYYMkaOmvL9xnrk5ltg17RxkzVVGMXtkzMqsPO8Dts/exec"; // Inserta aquí tu URL de Apps Script
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzvKJUIQto3sqiY7OnfiI-UHimI_l_vziAei_UFqyByHbOX9SHYuKF7LBn2FO-UPjjm/exec"; 
         
         let isSubmitting = false;
         const items = [
@@ -132,28 +131,43 @@
         let currentStep = 0;
         let totalSteps = 0;
 
-        // Generar números de equipo
+        // Generar números de equipo (1 al 5)
         const teamContainer = document.getElementById('teamContainer');
-        for(let i=1; i<=10; i++) {
+        for(let i=1; i<=5; i++) {
             teamContainer.innerHTML += `
                 <label class="relative flex items-center justify-center cursor-pointer group w-full">
                     <input type="radio" name="equipo" value="${i}" required class="peer sr-only">
-                    <div class="w-full text-center py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-black text-slate-500 transition-all peer-checked:bg-[#003399] peer-checked:text-white peer-checked:border-[#003399] group-hover:border-blue-300">
+                    <div class="w-full text-center py-4 bg-white border-2 border-slate-200 rounded-2xl text-lg font-black text-slate-500 transition-all peer-checked:bg-[#003399] peer-checked:text-white peer-checked:border-[#003399] group-hover:border-blue-300">
                         ${i}
                     </div>
                 </label>
             `;
         }
 
+        // Lógica de visualización de justificación
         window.toggleRetro = function(companero, item, valor) {
             const divId = `retro_c${companero}_item${item}`;
             const div = document.getElementById(divId);
             if (!div) return;
 
             const textarea = div.querySelector('textarea');
-            if (valor == "1") { 
+            const label = div.querySelector('.label-justificacion');
+            
+            // Valor 1: Totalmente en desacuerdo (Rojo)
+            // Valor 5: Totalmente de acuerdo (Verde)
+            if (valor == "1" || valor == "5") {
                 div.classList.remove('hidden');
                 textarea.required = true;
+                
+                if (valor == "1") {
+                    div.className = "ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm mt-4";
+                    label.innerText = "⚠️ Justificación Requerida:";
+                    label.className = "label-justificacion block text-xs font-black text-red-700 mb-2 uppercase tracking-widest";
+                } else {
+                    div.className = "ml-0 md:ml-4 border-l-8 border-emerald-500 bg-emerald-50 p-6 rounded-r-3xl fade-in shadow-sm mt-4";
+                    label.innerText = "✨ Justificación Requerida:";
+                    label.className = "label-justificacion block text-xs font-black text-emerald-700 mb-2 uppercase tracking-widest";
+                }
             } else {
                 div.classList.add('hidden');
                 textarea.required = false;
@@ -161,8 +175,23 @@
             }
         };
 
-        function createDynamicSteps() {
-            const numAevaluar = parseInt(document.getElementById('tamanoEquipo').value);
+        function initEvaluation() {
+            const equipoSel = document.querySelector('input[name="equipo"]:checked');
+            if (!equipoSel) {
+                showStatus("Selección requerida", "Por favor selecciona tu número de equipo para continuar.", "👥");
+                return;
+            }
+
+            const numEquipo = parseInt(equipoSel.value);
+            // Equipos 1, 2, 3 -> Evalúan a 3 compañeros
+            // Equipos 4, 5 -> Evalúan a 2 compañeros
+            const numAevaluar = (numEquipo <= 3) ? 3 : 2;
+            
+            createDynamicSteps(numAevaluar);
+            nextStep(1);
+        }
+
+        function createDynamicSteps(numAevaluar) {
             const container = document.getElementById('dynamicSteps');
             container.innerHTML = '';
             totalSteps = numAevaluar;
@@ -175,18 +204,18 @@
                 let html = `
                     <div class="border-b-2 border-slate-100 pb-6 mb-8 flex justify-between items-center">
                         <div>
-                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block">Fase de Evaluación</span>
-                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Evaluando al Compañero ${i}</h2>
+                            <span class="text-[10px] font-black text-[#003399] uppercase tracking-[0.2em] mb-1 block font-bold">Evaluación de Pares</span>
+                            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter">Compañero ${i}</h2>
                         </div>
-                        <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100">
-                            <span class="text-sm font-black text-[#003399] font-bold">${i} de ${numAevaluar}</span>
+                        <div class="bg-blue-50 px-4 py-2 rounded-full border border-blue-100 font-bold text-[#003399] text-sm">
+                            ${i} de ${numAevaluar}
                         </div>
                     </div>
                     <div class="bg-slate-50 p-6 rounded-2xl border-2 border-slate-100 shadow-inner">
-                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre del compañero:</label>
+                        <label class="block text-xs font-black text-slate-400 mb-3 uppercase tracking-widest">Nombre del compañero a evaluar:</label>
                         <input type="text" name="nombre_companero_${i}" required 
                                class="w-full p-4 bg-white border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-[#003399] transition font-bold" 
-                               placeholder="Nombre completo">
+                               placeholder="Escribe el nombre completo...">
                     </div>
                     <div class="space-y-12">
                 `;
@@ -198,7 +227,6 @@
                                 <div class="text-base text-slate-700 font-bold leading-snug pr-6">
                                     <span class="text-[#003399] opacity-30 mr-2 text-xl italic font-black">${idx + 1}</span> ${itemText}
                                 </div>
-                                
                                 <div class="flex flex-col md:flex-row md:contents gap-2">
                                     ${likertScales.map((label, sIdx) => {
                                         const val = sIdx + 1;
@@ -207,24 +235,17 @@
                                             <span class="hidden md:block text-[9px] text-slate-400 font-black text-center mb-3 uppercase tracking-tighter h-8 flex items-center leading-none group-hover:text-[#003399] transition-colors">
                                                 ${label}
                                             </span>
-                                            
-                                            <input type="radio" 
-                                                   name="c${i}_item${idx}" 
-                                                   value="${val}" 
-                                                   required 
+                                            <input type="radio" name="c${i}_item${idx}" value="${val}" required 
                                                    onchange="window.toggleRetro(${i}, ${idx}, this.value)" 
                                                    class="w-6 h-6 md:w-7 md:h-7 accent-[#003399]">
-                                            
                                             <span class="md:hidden font-bold text-slate-600 text-sm italic">${label}</span>
-                                        </label>
-                                        `;
+                                        </label>`;
                                     }).join('')}
                                 </div>
                             </div>
-
-                            <div id="retro_c${i}_item${idx}" class="hidden ml-0 md:ml-4 border-l-8 border-red-500 bg-red-50 p-6 rounded-r-3xl fade-in shadow-sm">
-                                <label class="block text-xs font-black text-red-700 mb-2 uppercase tracking-widest font-bold">⚠️ Justificación Requerida:</label>
-                                <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-red-200 rounded-2xl outline-none focus:ring-4 focus:ring-red-100 transition shadow-inner font-medium" rows="2" placeholder="Explique por qué marcó 'Totalmente en desacuerdo'..."></textarea>
+                            <div id="retro_c${i}_item${idx}" class="hidden">
+                                <label class="label-justificacion"></label>
+                                <textarea name="retro_c${i}_item${idx}" class="w-full p-4 text-sm bg-white border border-slate-200 rounded-2xl outline-none focus:ring-4 transition shadow-inner font-medium" rows="2" placeholder="Escribe tus comentarios aquí..."></textarea>
                             </div>
                         </div>
                     `;
@@ -234,7 +255,7 @@
                     </div>
                     <div class="flex flex-col sm:flex-row gap-4 pt-10">
                         <button type="button" onclick="prevStep()" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-500 font-black py-4 rounded-2xl transition border border-slate-200 uppercase text-xs tracking-widest">Atrás</button>
-                        <button type="button" id="btnNext${i}" onclick="handleNext(${i})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
+                        <button type="button" onclick="handleNext(${i})" class="flex-[2] bg-[#003399] hover:bg-[#002673] text-white font-black py-4 rounded-2xl shadow-xl transition transform hover:-translate-y-1 uppercase text-xs tracking-widest">
                             ${i === numAevaluar ? 'Enviar Calificaciones' : 'Siguiente Compañero'}
                         </button>
                     </div>
@@ -245,8 +266,7 @@
         }
 
         function updateProgress() {
-            const totalStepsInApp = totalSteps + 1;
-            const progress = (currentStep / totalStepsInApp) * 100;
+            const progress = (currentStep / (totalSteps + 1)) * 100;
             document.getElementById('progressBar').style.width = `${progress}%`;
         }
 
@@ -257,18 +277,14 @@
             const radioGroups = new Set();
             currentEl.querySelectorAll('input[type="radio"][required]').forEach(r => radioGroups.add(r.name));
             radioGroups.forEach(name => { if(!currentEl.querySelector(`input[name="${name}"]:checked`)) valid = false; });
-            
-            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => { 
-                if(!input.value.trim()) valid = false; 
-            });
+            currentEl.querySelectorAll('input[type="text"][required], textarea[required]').forEach(input => { if(!input.value.trim()) valid = false; });
 
             if(!valid) {
-                showStatus("Faltan datos", "Por favor completa toda la evaluación y las justificaciones del compañero antes de continuar.", "⚠️");
+                showStatus("Faltan datos", "Por favor completa toda la evaluación y las justificaciones obligatorias.", "⚠️");
                 return;
             }
 
             if (stepNum === totalSteps) {
-                // Si es el último, enviar datos automáticamente
                 submitData();
             } else {
                 nextStep(stepNum + 1);
@@ -276,10 +292,7 @@
         }
 
         function nextStep(target) {
-            const currentEl = document.getElementById(`step${currentStep}`);
-            if(currentStep === 0) createDynamicSteps();
-            
-            currentEl.classList.remove('active');
+            document.getElementById(`step${currentStep}`).classList.remove('active');
             currentStep = target;
             document.getElementById(`step${currentStep}`).classList.add('active');
             updateProgress();
@@ -287,8 +300,7 @@
         }
 
         function prevStep() {
-            const currentEl = document.getElementById(`step${currentStep}`);
-            currentEl.classList.remove('active');
+            document.getElementById(`step${currentStep}`).classList.remove('active');
             currentStep = currentStep - 1;
             document.getElementById(`step${currentStep}`).classList.add('active');
             updateProgress();
@@ -296,18 +308,29 @@
         }
 
         async function submitData() {
-            if (!GOOGLE_SCRIPT_URL) {
-                showStatus("Configuración Pendiente", "La URL de Google Sheets no ha sido configurada.", "📋");
-                return;
-            }
             if (isSubmitting) return;
-
             isSubmitting = true;
-            showLoading("Enviando resultados...", "Estamos guardando tus evaluaciones de forma segura. Por favor no cierres esta ventana.");
+            showLoading("Enviando resultados...", "Guardando evaluaciones en la base de datos de EGADE.");
 
             const form = document.getElementById('evaluationForm');
             const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
+            const payload = {};
+
+            // Procesar datos para agregar prefijos DESACUERDO: o DE ACUERDO:
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('retro_')) {
+                    const match = key.match(/retro_c(\d+)_item(\d+)/);
+                    if (match) {
+                        const compId = match[1];
+                        const itemId = match[2];
+                        const radioVal = formData.get(`c${compId}_item${itemId}`);
+                        
+                        if (radioVal === "1") value = "DESACUERDO: " + value;
+                        if (radioVal === "5") value = "DE ACUERDO: " + value;
+                    }
+                }
+                payload[key] = value;
+            }
 
             try {
                 await fetch(GOOGLE_SCRIPT_URL, {
@@ -315,15 +338,13 @@
                     mode: 'no-cors',
                     cache: 'no-cache',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(payload)
                 });
                 
-                showStatus("¡Resultados Enviados!", "La coevaluación se ha guardado con éxito. Gracias por tu participación.", "✅");
-                // Deshabilitar botones para evitar reenvíos
+                showStatus("¡Envío Exitoso!", "Tus coevaluaciones han sido registradas correctamente.", "✅");
                 document.querySelectorAll('button').forEach(b => b.disabled = true);
-                setTimeout(() => location.reload(), 5000);
             } catch (error) {
-                showStatus("Error de Conexión", "No pudimos enviar los datos. Revisa tu conexión e intenta de nuevo.", "❌");
+                showStatus("Error", "No se pudo conectar con el servidor. Intenta de nuevo.", "❌");
                 isSubmitting = false;
             }
         }
@@ -348,9 +369,7 @@
         }
 
         function closeStatus() {
-            if (!isSubmitting) {
-                document.getElementById('statusMessage').classList.add('hidden');
-            }
+            if (!isSubmitting) document.getElementById('statusMessage').classList.add('hidden');
         }
     </script>
 </body>
